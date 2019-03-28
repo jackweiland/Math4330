@@ -9,10 +9,13 @@ def absolute(number):
     Returns:
         The magnitude of the input number as a nubmer.
     """
-    result = (number.real ** 2 + number.imag ** 2) ** (1/2)
-    return result
+    if number == 0:
+        return number
+    else:
+        result = (number.real ** 2 + number.imag ** 2) ** (1/2)
+        return result
 
-def complex_conjugate(complex_number):
+def complexConjugate(complex_number):
     """ Compute the complex conjugate of a number
 
     Sets the result as the real part of the input, then
@@ -28,7 +31,7 @@ def complex_conjugate(complex_number):
     result = result - complex_number.imag * 1j
     return result
 
-def vector_add(vector_x, vector_y):
+def vectorAdd(vector_x, vector_y):
     """ Computes the sum of two vectors
 
     Initializes result to be a zero vector with the same length as
@@ -50,7 +53,7 @@ def vector_add(vector_x, vector_y):
         result[index] = vector_x[index] + vector_y[index]
     return result
 
-def p_norm(vector, p):
+def pNorm(vector, p):
     """ P-norm of a vector
 
     Result is set to be zero. The absolute value of each element of the
@@ -72,7 +75,7 @@ def p_norm(vector, p):
     result = result ** (1/p)
     return result
 
-def two_norm(vector):
+def twoNorm(vector):
     """ Calculates the two norm of a vector
 
     Initilizes result to be zero. The absolute value of each element of the
@@ -93,7 +96,7 @@ def two_norm(vector):
     result = result ** (1/2)
     return result
 
-def max_norm(vector):
+def maxNorm(vector):
     """ Calculates the max norm of a vector
 
     Initilizes result to be zero. Then for every element of the input vector
@@ -112,7 +115,7 @@ def max_norm(vector):
         result = max(result, absolute(vector[index]))
     return result
 
-def scalar_vector_prod(vector, scalar):
+def scalarVectorMulti(vector, scalar):
     """ Vector and scalar product
 
     Initializes result to be a zero vector with the same length as the input
@@ -152,10 +155,10 @@ def dot(vector_x, vector_y):
     """
     result = 0
     for index in range(len(vector_x)):
-        result += complex_conjugate(vector_x[index]) * vector_y[index]
+        result += complexConjugate(vector_x[index]) * vector_y[index]
     return result
 
-def vector_conjugate(vector):
+def vectorConjugate(vector):
     """ Conjugate of a vector
 
     Initializes result to be a zero vector with the same length as
@@ -173,10 +176,10 @@ def vector_conjugate(vector):
     """
     result = [0] * len(vector)
     for index in range(len(vector)):
-        result[index] = complex_conjugate(vector[index])
+        result[index] = complexConjugate(vector[index])
     return result
 
-def matrix_vector_prod(matrix, vector):
+def matrixVectorMulti(matrix, vector):
     """ Matrix and vector product
 
     Initializes a zero vector with compatible length. For each column vector in
@@ -195,11 +198,11 @@ def matrix_vector_prod(matrix, vector):
     """
     result = [0] * len(matrix[0])
     for index in range(len(matrix)):
-        temp = scalar_vector_prod(matrix[index], vector[index])
-        result =  vector_add(result, temp)
+        temp = scalarVectorMulti(matrix[index], vector[index])
+        result =  vectorAdd(result, temp)
     return result
 
-def scalar_matrix_prod(matrix, scalar):
+def scalarMatrixMulti(matrix, scalar):
     """ Scalar and matrix product
 
     Initializes result as a zero vector with length equivalent to the number
@@ -217,10 +220,10 @@ def scalar_matrix_prod(matrix, scalar):
     """
     result = [0] * len(matrix)
     for index in range(len(matrix)):
-        result[index] = scalar_vector_prod(matrix[index], scalar)
+        result[index] = scalarVectorMulti(matrix[index], scalar)
     return result
 
-def matrix_conjugate(matrix):
+def matrixConjugate(matrix):
     """ Conjugate each elements of a matrix
 
     Initilizes result to be a zero vector with the length equivelent to
@@ -237,10 +240,10 @@ def matrix_conjugate(matrix):
     """
     result = [0] * len(matrix)
     for index in range(len(matrix)):
-        result[index] = vector_conjugate(matrix[index])
+        result[index] = vectorConjugate(matrix[index])
     return result
 
-def matrix_matrix_prod(matrix_A, matrix_B):
+def matrixMulti(matrix_A, matrix_B):
     """ Product of two matices
 
     Initilizes result to be a zero vector with the same length as
@@ -261,10 +264,10 @@ def matrix_matrix_prod(matrix_A, matrix_B):
     """
     result = [0] * len(matrix_B)
     for index in range(len(matrix_B)):
-        result[index] = matrix_vector_prod(matrix_A, matrix_B[index])
+        result[index] = matrixVectorMulti(matrix_A, matrix_B[index])
     return result
 
-def conjugate_transpose(matrix):
+def conjugateTranspose(matrix):
     """ Conjugate transpose of a matrix
 
     Initilizes result to be a zero matrix with same dimensions of the transpose
@@ -281,13 +284,13 @@ def conjugate_transpose(matrix):
     result =  [[]] * len(matrix[0])
     for index in range(len(matrix[0])):
         result[index] = [0] * len(matrix)
-    conjugate = matrix_conjugate(matrix)
+    conjugate = matrixConjugate(matrix)
     for index1 in range(len(conjugate)):
         for index2 in range(len(conjugate[0])):
             result[index2][index1] = conjugate[index1][index2]
     return result
 
-def ortho_decomp(ortho_set, vector):
+def orthoDecomp(ortho_set, vector):
     """ Computes an orthogonal vector.
 
     This function computes the orthogonal decomposition of vector with
@@ -306,11 +309,30 @@ def ortho_decomp(ortho_set, vector):
     result = [0] * len(vector)
     for index in range(len(ortho_set)):
         temp0 = dot(ortho_set[index], vector)
-        temp1 = scalar_vector_prod(ortho_set[index], -1 * temp0)
-        result = vector_add(result, temp1)
+        temp1 = scalarVectorMulti(ortho_set[index], -1 * temp0)
+        result = vectorAdd(result, temp1)
     return result
 
-def qrFactorization(matrix_a):
+def normalize(vector):
+    """ Normalizes a vector
+
+    Sets temp to be the two norm of the input vector. For each element in the input vector
+    the element will be multiplied by the reciprocal of temp. If temp is 0 then input is invalid.
+
+    Args:
+        vector: an arbitrary vector of arbitrary length. Represented as a list of numbers.
+    Returns:
+        The normalized vector with respect to the two norm with the same length as the input
+        vector. Represented as a list of numbers.
+    """
+    temp = twoNorm(vector)
+    if temp == 0:
+        print("Error: The zero vector can not be normalized.")
+    else:
+        result = scalarVectorMulti(vector, 1 / temp)
+        return result
+
+def qrFactor(matrix_a):
     """ QR factorization modified Gram-Schdmit
 
     Initilizes matrix_q, matrix_r, and temp_set. For each index0 from 0 to the
@@ -340,14 +362,14 @@ def qrFactorization(matrix_a):
         matrix_q[index] = [0] * len(matrix_a[0])
     for index in range(len(matrix_a)):
         matrix_r[index] = [0] * len(matrix_a)
+
     for index in range(len(matrix_a)):
         temp_set[index] = matrix_a[index]
     for index0 in range(len(matrix_a)):
-        matrix_r[index0][index0] = two_norm(temp_set[index0])
-        matrix_q[index0] = scalar_vector_prod(temp_set[index0],
-                1 / matrix_r[index0][index0])
+        matrix_r[index0][index0] = twoNorm(temp_set[index0])
+        matrix_q[index0] = normalize(temp_set[index0])
         for index1 in range(index0, len(matrix_a)):
             matrix_r[index1][index0] = dot(matrix_q[index0], temp_set[index1])
-            temp_set[index1] = vector_add(temp_set[index1], scalar_vector_prod(
+            temp_set[index1] = vectorAdd(temp_set[index1], scalarVectorMulti(
                 matrix_q[index0], -1 * matrix_r[index1][index0]))
     return [matrix_q, matrix_r]
