@@ -9,11 +9,11 @@ def absolute(number):
     Returns:
         The magnitude of the input number as a nubmer.
     """
-    if number == 0:
-        return number
-    else:
+    try:
         result = (number.real ** 2 + number.imag ** 2) ** (1/2)
         return result
+    except AttributeError as err:
+        print("Error:", err)
 
 def complexConjugate(complex_number):
     """ Compute the complex conjugate of a number
@@ -27,9 +27,12 @@ def complexConjugate(complex_number):
     Returns:
         The complex conjugate of the input
     """
-    result = complex_number.real
-    result = result - complex_number.imag * 1j
-    return result
+    try:
+        result = complex_number.real
+        result = result - complex_number.imag * 1j
+        return result
+    except AttributeError as err:
+        print("Error:", err)
 
 def vectorAdd(vector_x, vector_y):
     """ Computes the sum of two vectors
@@ -48,10 +51,16 @@ def vectorAdd(vector_x, vector_y):
         A list of the same length as vector_x which is the sum
         of two input vectors.
     """
-    result = [0] * len(vector_x)
-    for index in range(len(vector_x)):
-        result[index] = vector_x[index] + vector_y[index]
-    return result
+    try:
+        if len(vector_x) == len(vector_y):
+            result = [0] * len(vector_x)
+            for index in range(len(vector_x)):
+                result[index] = vector_x[index] + vector_y[index]
+            return result
+        else:
+            print("Error: Input vectors are not of compatible length.")
+    except TypeError as err:
+        print("Error:", err)
 
 def pNorm(vector, p):
     """ P-norm of a vector
@@ -99,9 +108,8 @@ def twoNorm(vector):
 def maxNorm(vector):
     """ Calculates the max norm of a vector
 
-    Initilizes result to be zero. Then for every element of the input vector
-    it will take the maximum of result and the absolute value of the vector
-    element and redefine result to be that max.
+    Initilizes result to be the first index of vector. Then for every element of the input vector
+    it will compare it to result. If the element is bigger then it will become result.
 
     Args:
         vector: An arbitrary vector of arbitrary length. Repreesented as a
@@ -110,9 +118,10 @@ def maxNorm(vector):
     Returns:
         The max norm of the vector. Represented as a real number greater than or equal to 0.
     """
-    result = 0
+    result = vector[0]
     for index in range(len(vector)):
-        result = max(result, absolute(vector[index]))
+        if vector[index] > result:
+            result = vector[index]
     return result
 
 def scalarVectorMulti(vector, scalar):
@@ -355,21 +364,143 @@ def qrFactor(matrix_a):
         matrix_r: The square upper triangular matrix R with the same length as
                   the rows of matrix_a. Represented as a list of column vectors.
     """
-    temp_set = [0] * len(matrix_a)
-    matrix_q = [[]] * len(matrix_a)
-    matrix_r = [[]] * len(matrix_a)
-    for index in range(len(matrix_a)):
+    length = len(matrix_a)
+    temp_set = [0] * length
+    matrix_q = [[]] * length
+    matrix_r = [[]] * length
+    for index in range(length):
         matrix_q[index] = [0] * len(matrix_a[0])
-    for index in range(len(matrix_a)):
+    for index in range(length):
         matrix_r[index] = [0] * len(matrix_a)
-
-    for index in range(len(matrix_a)):
+    for index in range(length):
         temp_set[index] = matrix_a[index]
-    for index0 in range(len(matrix_a)):
+    for index0 in range(length):
         matrix_r[index0][index0] = twoNorm(temp_set[index0])
         matrix_q[index0] = normalize(temp_set[index0])
-        for index1 in range(index0, len(matrix_a)):
+        for index1 in range(index0, length):
             matrix_r[index1][index0] = dot(matrix_q[index0], temp_set[index1])
             temp_set[index1] = vectorAdd(temp_set[index1], scalarVectorMulti(
                 matrix_q[index0], -1 * matrix_r[index1][index0]))
     return [matrix_q, matrix_r]
+
+def vandermondeFour(vector):
+    """ Compute the Vandermonde Matrix of degree 4
+
+    Initilizes result to be a vector with elements 1 and length the same as the input vector. For the second
+    element to the last of the input vector the program will define temp to be the vector whose elements are
+    the input vector's to the power of the element. Then temp will be appended to the result. Finally
+    result is returned.
+
+    Args:
+        vector: an arbitrary vector with arbitrary length represented as a list of numbers.
+
+    Returns:
+        The vandermonde matrix with dimensions len(vector) x 5 as a list of vectors.
+    """
+    result = [[1] * len(vector)]
+    for index in range(1, 5):
+        temp = [x ** index for x in vector]
+        result.append(temp)
+    return result
+
+def vandermonde(vector, degree):
+    """ Compute the Vandermonde Matrix of degree n
+
+    Initilizes result to be the vector of all 1s and length the same as vector. Then appends a column to result
+    where each element of this new column is raised to the power of the column number - 1.
+
+    Args:
+        vector: an arbitrary vector with arbitrary length represented as a list of numbers.
+        degree: a number that signifies the degree for the vandermonde matrix
+
+    Returns:
+        The vandermonde matrix stored as a nested list of lists.
+    """
+    result = [[1] * len(vector)]
+    for index in range(1, degree + 1):
+        temp = [x ** index for x in vector]
+        result.append(temp)
+    return result
+
+def backSubSum(matrix, vector, count):
+    """ Compute the sum for the Back Substitution Algorithm
+
+    Initilizes result to be 0. Then takes the sum of the product of the elements of vector_x and
+    vector_y from count + 1 to length of the vector_x.
+
+    Args:
+        vector_x: A single column of the matrix A represented as a list of numbers.
+        vector_y: An arbitrary vector with the same length as vector_x represented as a list of numbers.
+
+    Returns:
+        A number
+    """
+    result = 0
+    for index in range(len(vector)):
+        result += matrix[index][count] * vector[index]
+    return result
+
+def backSub(matrix, vector):
+    """ Preforms Back Substitution
+
+    Initilizes the result to be the input vector. Then going backwards from the last element of the vector to the
+    first, the function sets temp to be the difference between the current element of the vector and the sum of 
+    the products of the upper off diagnols of the matrix at the current row and the previously computed elements
+    of result.
+
+    Args:
+        matrix: An arbitrary upper-triangular matrix represented as a nested list of lists
+        vector: An arbitrary vector of compatible dimensions represented as a list of numbers
+
+    Returns:
+        A vector represented as a list of numbers, which satisfies the upper-triangular system.
+    """
+    length = len(vector)
+    result = vector
+    for index in range(length - 1, -1, -1):
+        temp = vector[index] - backSubSum(matrix[index + 1:length], result[index + 1:length], index)
+        result[index] = temp / matrix[index][index]
+    return result
+
+def alphaPoly(data_x, data_y, degree):
+    """ Interpolate data at input_x
+
+    The function will set up a vandermonde matrix as matrix_A, then compute the QR factorization
+    of that matrix. Then the function will solve for Q* and use back substitution to solve for and return  the 
+    coefficents of the polynomial.
+
+    Args:
+        data_x: The independent data stored as a list of numbers
+        data_y: The dependent data stored as a list of numbers
+        degree: A number that represents the highest degree of the polynomial
+
+    Returns:
+        The coefficents of the interpolated polynomial as a list of numbers
+    """
+    result = 0
+    matrix_a = vandermonde(data_x, degree)
+    matrix_q, matrix_r = qrFactor(matrix_a)
+    inv_matrix_q = conjugateTranspose(matrix_q)
+    vector_b = matrixVectorMulti(inv_matrix_q, data_y)
+    return backSub(matrix_r, vector_b)
+
+def interpolPoly(data_x, data_y, degree, number_x):
+    """ Display the Interpolated Polynomial at number_x
+
+    The function computes the coefficents of the interpolated polynomial and then prints the polynomial and
+    the value of the polynomial at the number_x.
+
+    Args:
+        vector_alph: a list of numbers that corrispond to the coefficients of the polynomial
+        number_x: a number that the polynomial will be evaluated at
+
+    Returns:
+        The value of the polynomial at number_x
+    """
+    vector_alph = alphaPoly(data_x, data_y, degree)
+    result = vector_alph[0]
+    print("f(x) = ", vector_alph[0], sep="", end="")
+    for index in range(1, len(vector_alph)):
+        result += vector_alph[index] * number_x ** index
+        print(" + ", vector_alph[index], "x^", index, sep="", end="")
+    print("\nf(", number_x, ") = ", result, sep="")
